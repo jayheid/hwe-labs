@@ -45,7 +45,7 @@ reviewCategory.show(n=50, truncate = False)
 
 # Question 7: Find the most helpful review in the dataframe - the one with the highest number of helpful votes.
 # What is the product title for that review? How many helpful votes did it have?
-helpfulReviews = spark.sql("SELECT product_title, review_id, SUM(CAST(helpful_votes AS int)) AS total_helpful_votes " \
+helpfulReviews = spark.sql("SELECT review_id, product_title, SUM(CAST(helpful_votes AS int)) AS total_helpful_votes " \
     "FROM reviewSet " \
     "GROUP BY 1,2 " \
     "ORDER BY 3 DESC")
