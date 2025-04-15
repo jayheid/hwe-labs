@@ -18,6 +18,8 @@ reviews = spark.read.csv("resources/reviews.tsv.gz",
                             sep = "\t", 
                             header = True)
 
+reviews.printSchema()
+
 # Question 2: Create a virtual view on top of the reviews dataframe, so that we can query it with Spark SQL.
 reviews.createOrReplaceTempView("reviewSet")
 
@@ -43,12 +45,12 @@ reviewCategory.show(n=50, truncate = False)
 
 # Question 7: Find the most helpful review in the dataframe - the one with the highest number of helpful votes.
 # What is the product title for that review? How many helpful votes did it have?
-helpfulReviews = spark.sql("SELECT product_title, SUM(CAST(helpful_votes AS int)) AS total_helpful_votes " \
+helpfulReviews = spark.sql("SELECT product_title, review_id, SUM(CAST(helpful_votes AS int)) AS total_helpful_votes " \
     "FROM reviewSet " \
-    "GROUP BY product_title " \
-    "ORDER BY 2 DESC")
-helpfulReviews.show(n=1, truncate=False)
-# SimCity-Limited Edition has the most total helpful votes with 35,582
+    "GROUP BY 1,2 " \
+    "ORDER BY 3 DESC")
+helpfulReviews.show(n=10, truncate=False)
+# A review for SimCity - Limited Edition has the most helpful votes of 5068
 
 # Question 8: How many reviews exist in the dataframe with a 5 star rating?
 fiveStarRatingReviews = spark.sql("SELECT COUNT(*) FROM reviewSet WHERE star_rating = '5'")
