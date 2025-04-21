@@ -18,8 +18,6 @@ reviews = spark.read.csv("resources/reviews.tsv.gz",
                             sep = "\t", 
                             header = True)
 
-reviews.printSchema()
-
 # Question 2: Create a virtual view on top of the reviews dataframe, so that we can query it with Spark SQL.
 reviews.createOrReplaceTempView("reviewSet")
 
@@ -39,8 +37,8 @@ reviewSubset.show(n=5, truncate = True)
 # Question 6: Create a new dataframe based on "reviews" with exactly 1 column: the value of the product category field.
 # Look at the first 50 rows of that dataframe. 
 # Which value appears to be the most common?
-reviewCategory = spark.sql("SELECT product_category FROM reviewSet")
-reviewCategory.show(n=50, truncate = False)
+reviewCategory = spark.sql("SELECT product_category FROM reviewSet LIMIT 50")
+reviewCategory.show(truncate = False)
 # Digital_Video_Games appears to be the most common value in result
 
 # Question 7: Find the most helpful review in the dataframe - the one with the highest number of helpful votes.
@@ -48,8 +46,9 @@ reviewCategory.show(n=50, truncate = False)
 helpfulReviews = spark.sql("SELECT review_id, product_title, SUM(CAST(helpful_votes AS int)) AS total_helpful_votes " \
     "FROM reviewSet " \
     "GROUP BY 1,2 " \
-    "ORDER BY 3 DESC")
-helpfulReviews.show(n=10, truncate=False)
+    "ORDER BY 3 DESC " \
+    "LIMIT 1")
+# helpfulReviews.show(n=10, truncate=False)
 # A review for SimCity - Limited Edition has the most helpful votes of 5068
 
 # Question 8: How many reviews exist in the dataframe with a 5 star rating?
@@ -66,12 +65,12 @@ castIntSet = spark.sql("SELECT CAST(star_rating AS int)," \
     "CAST(total_votes AS int) " \
     "FROM reviewSet")
 
-castIntSet.show(n=10)
+# castIntSet.show(n=10)
 
 # Question 10: Find the date with the most purchases.
 # Print the date and total count of the date which had the most purchases.
-dateOfMostPurchases = spark.sql("SELECT purchase_date, COUNT(*) as total_purchases FROM reviewSet GROUP BY purchase_date ORDER BY total_purchases DESC")
-dateOfMostPurchases.show(n=1)
+dateOfMostPurchases = spark.sql("SELECT purchase_date, COUNT(*) as total_purchases FROM reviewSet GROUP BY purchase_date ORDER BY total_purchases DESC LIMIT 1")
+dateOfMostPurchases.show()
 
 
 ##Question 11: Write the dataframe from Question 3 to your drive in JSON format.
