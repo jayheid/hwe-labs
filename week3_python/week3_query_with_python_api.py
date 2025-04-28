@@ -62,9 +62,12 @@ productCategory.show()
 #Question 6: Find the most helpful review in the dataframe - the one with the highest number of helpful votes.
 #What is the product title for that review? How many helpful votes did it have?
 reviews = reviews.withColumn('helpful_votes', col('helpful_votes').cast('int'))
-mostHelpfulReview = reviews.groupby('review_id','product_title').sum('helpful_votes').orderBy('sum(helpful_votes)',ascending=False).limit(1)
-mostHelpfulReview.show(truncate=False)
+# mostHelpfulReview = reviews.groupby('review_id','product_title').sum('helpful_votes').orderBy('sum(helpful_votes)',ascending=False).limit(1)
+# mostHelpfulReview.show(truncate=False)
 # A review for SimCity - Limited Edition has 5068 helpful votes
+
+mostHelpfulReview = reviews.sort(desc("helpful_votes")).select("product_title","helpful_votes")
+mostHelpfulReview.show(n=1, truncate = False)
 
 #Question 7: How many reviews have a 5 star rating?
 reviews = reviews.withColumn('star_rating', col('star_rating').cast('int'))
