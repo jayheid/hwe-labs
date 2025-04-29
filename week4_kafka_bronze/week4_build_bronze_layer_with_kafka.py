@@ -1,6 +1,6 @@
 import os
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, current_timestamp
+from pyspark.sql.functions import col, current_timestamp, split
 
 # Load environment variables.
 from dotenv import load_dotenv
@@ -49,8 +49,51 @@ df = spark \
     .option("kafka.sasl.jaas.config", getScramAuthString(username, password)) \
     .load()
 
+df.printSchema()
+df.createOrReplaceTempView("reviews")
+df = spark.sql("SELECT CAST(key AS string) AS key, " \
+"CAST(value AS string) AS value, " \
+"topic, " \
+"partition, " \
+"offset, " \
+"timestamp, " \
+"timestampType " \
+"FROM reviews")
+
+df = spark.sql("SELECT " \
+"split(value, '\t')[0] AS marketplace, " \
+"split(value, '\t')[1] AS customer_id, " \
+"split(value, '\t')[2] AS review_id, " \
+"split(value, '\t')[3] AS product_id, " \
+"split(value, '\t')[4] AS product_parent, " \
+"split(value, '\t')[5] AS product_title, " \
+"split(value, '\t')[6] AS product_category, " \
+"split(value, '\t')[7] AS star_rating, " \
+"split(value, '\t')[8] AS helpful_votes, " \
+"split(value, '\t')[9] AS total_votes, " \
+"split(value, '\t')[10] AS vine, " \
+"split(value, '\t')[11] AS verified_purchase, " \
+"split(value, '\t')[12] AS review_headline, " \
+"split(value, '\t')[13] AS review_body, " \
+"split(value, '\t')[14] AS purchase_date, " \
+"current_timestamp() AS review_timestamp " \
+"FROM reviews")
+
+df.printSchema()
+# write to parquet 
+# df.write.parquet("s3a://hwe-spring-2025/jheidbrink/bronze/reviews", mode='append')
+
+# Create table and write to parquet
+
+
 # Process the received data
-query = None
+query = df \
+  .writeStream \
+  .outputMode("append") \
+  .format("parquet") \
+  .option("path", "s3a://hwe-spring-2025/jheidbrink/bronze/reviews") \
+  .option("checkpointLocation", "/tmp/kafka-checkpoint") \
+  .start()
 
 # Wait for the streaming query to finish
 query.awaitTermination()
