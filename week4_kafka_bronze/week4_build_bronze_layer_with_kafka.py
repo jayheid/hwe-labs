@@ -79,13 +79,6 @@ df = spark.sql("SELECT " \
 "current_timestamp() AS review_timestamp " \
 "FROM reviews")
 
-df.printSchema()
-# write to parquet 
-# df.write.parquet("s3a://hwe-spring-2025/jheidbrink/bronze/reviews", mode='append')
-
-# Create table and write to parquet
-
-
 # Process the received data
 query = df \
   .writeStream \
@@ -97,6 +90,8 @@ query = df \
 
 # Wait for the streaming query to finish
 query.awaitTermination()
+
+# Create table on top of S3 data
 
 # Stop the SparkSession
 spark.stop()
