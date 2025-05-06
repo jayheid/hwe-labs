@@ -48,9 +48,11 @@ df = spark \
     .option("kafka.sasl.mechanism", "SCRAM-SHA-512") \
     .option("kafka.sasl.jaas.config", getScramAuthString(username, password)) \
     .load()
+#    .select(split(col("value").cast("string"), "\t"))
 
 df.printSchema()
 df.createOrReplaceTempView("reviews")
+# df = spark.sql("select split(cast(value as string), '\t') AS tsv FROM reviews")
 df = spark.sql("SELECT CAST(key AS string) AS key, " \
 "CAST(value AS string) AS value, " \
 "topic, " \
@@ -61,23 +63,25 @@ df = spark.sql("SELECT CAST(key AS string) AS key, " \
 "FROM reviews")
 
 df = spark.sql("SELECT " \
-"split(value, '\t')[0] AS marketplace, " \
-"split(value, '\t')[1] AS customer_id, " \
-"split(value, '\t')[2] AS review_id, " \
-"split(value, '\t')[3] AS product_id, " \
-"split(value, '\t')[4] AS product_parent, " \
-"split(value, '\t')[5] AS product_title, " \
-"split(value, '\t')[6] AS product_category, " \
-"split(value, '\t')[7] AS star_rating, " \
-"split(value, '\t')[8] AS helpful_votes, " \
-"split(value, '\t')[9] AS total_votes, " \
-"split(value, '\t')[10] AS vine, " \
-"split(value, '\t')[11] AS verified_purchase, " \
-"split(value, '\t')[12] AS review_headline, " \
-"split(value, '\t')[13] AS review_body, " \
-"split(value, '\t')[14] AS purchase_date, " \
+"CAST(split(value, '\t')[0] AS string) AS marketplace, " \
+"CAST(split(value, '\t')[1] AS string) AS customer_id, " \
+"CAST(split(value, '\t')[2] AS string) AS review_id, " \
+"CAST(split(value, '\t')[3] AS string) AS product_id, " \
+"CAST(split(value, '\t')[4]  AS string) AS product_parent, " \
+"CAST(split(value, '\t')[5] AS string) AS product_title, " \
+"CAST(split(value, '\t')[6] AS string) AS product_category, " \
+"CAST(split(value, '\t')[7] AS int) AS star_rating, " \
+"CAST(split(value, '\t')[8] AS int) AS helpful_votes, " \
+"CAST(split(value, '\t')[9] AS int) AS total_votes, " \
+"CAST(split(value, '\t')[10] AS string) AS vine, " \
+"CAST(split(value, '\t')[11] AS string) AS verified_purchase, " \
+"CAST(split(value, '\t')[12] AS string) AS review_headline, " \
+"CAST(split(value, '\t')[13] AS string) AS review_body, " \
+"CAST(split(value, '\t')[14] AS string) AS purchase_date, " \
 "current_timestamp() AS review_timestamp " \
 "FROM reviews")
+
+df.printSchema()
 
 # Process the received data
 query = df \
@@ -88,10 +92,18 @@ query = df \
   .option("checkpointLocation", "/tmp/kafka-checkpoint") \
   .start()
 
+"""
+# write to console
+query = df \
+  .writeStream \
+  .format("console") \
+  .outputMode("append") \
+  .option("checkpointLocation", "/tmp/kafka-checkpoint") \
+  .start()
+"""
+
 # Wait for the streaming query to finish
 query.awaitTermination()
-
-# Create table on top of S3 data
 
 # Stop the SparkSession
 spark.stop()
